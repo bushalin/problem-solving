@@ -1,0 +1,35 @@
+# ubuntu:18.04 bionic
+FROM ubuntu:18.04
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Tokyo
+
+RUN apt-get update && apt-get install -y build-essential cmake wget software-properties-common
+
+# Install the g++-8 package and set it as the default g++ compiler
+RUN apt install -y g++-8
+RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 100
+RUN update-alternatives --config g++
+
+# Install the gcc-8 package and set it as the default gcc compiler
+RUN apt install -y gcc-8
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 100
+RUN update-alternatives --config gcc
+
+# Install related libs for using SDK library
+RUN apt-get install -y libopenblas-dev qtbase5-dev libavcodec-dev libavformat-dev libswscale-dev uuid-dev
+
+ENV WUSER=wrapper
+ENV GID=1000
+RUN groupadd -g ${GID} ${WUSER}
+RUN useradd -g ${GID} -l -m -s /bin/false -u ${GID} ${WUSER}
+
+RUN ln -sf /bin/bash /bin/sh
+ENV SHELL /bin/bash
+
+USER ${WUSER}
+WORKDIR /app
+
+COPY . .
+RUN ./build_application.sh
+
+CMD ["./build/bin/SAMPLE_APP"]
